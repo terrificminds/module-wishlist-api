@@ -47,7 +47,22 @@ class WishlistManagement implements WishlistManagementInterface
         if (!$wishlist->getId()) {
             throw new NoSuchEntityException(__('Customer does not yet have a wishlist', null, 1));
         }
-        $wishlist['items'] = $wishlist->getItemCollection()->getItems();
+        $wishlistItems = $wishlist->getItemCollection()->getItems();
+        foreach ($wishlistItems as $item) {
+            $product = $this->productRepository->getById($item->getProductId());
+            $item->setData('product_sku', $product->getSku());
+        }
+        $wishlistItemsArray = [];
+        foreach ($wishlistItems as $item) {
+            $itemData = $item->getData();
+            foreach ($itemData as $key => $value) {
+                if (is_numeric($value)) {
+                    $itemData[$key] = $value + 0;
+                }
+            }
+            $wishlistItemsArray[] = $itemData;
+        }
+        $wishlist->setData('items', $wishlistItemsArray);
         return $wishlist;
     }
 
